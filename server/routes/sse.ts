@@ -1,36 +1,32 @@
 import { Hono } from "hono";
+import { streamSSE } from "hono/streaming";
 import { addClient, removeClient } from "../sse";
 import { queries } from "../db";
-import { crypto } from "bun";
 
 export const sseRouter = new Hono();
 
 sseRouter.get("/", (c) => {
-  const id = crypto.randomUUID();
+  return streamSSE(c, async (stream) => {
+    const id = crypto.randomUUID();
 
-  const stream = new ReadableStream<Uint8Array>({
-    start(controller) {
-      const client = { id, controller };
-      addClient(client);
+    const client = {
+      id,
+      send: (event: string, data: unknown) =>
+        stream.writeSSE({ event, data: JSON.stringify(data) }),
+    };
 
-      // Send current game state immediately on connect
-      const state = queries.getGameState.get();
-      const encoder = new TextEncoder();
-      controller.enqueue(
-        encoder.encode(`event: init\ndata: ${JSON.stringify({ state })}\n\n`)
-      );
+    addClient(client);
 
-      c.req.raw.signal.addEventListener("abort", () => {
+    // Send current game state immediately on connect
+    const state = queries.getGameState.get();
+    await stream.writeSSE({ event: "init", data: JSON.stringify({ state }) });
+
+    // Keep open until client disconnects
+    await new Promise<void>((resolve) => {
+      stream.onAbort(() => {
         removeClient(client);
+        resolve();
       });
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
+    });
   });
 });

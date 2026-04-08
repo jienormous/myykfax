@@ -1,10 +1,9 @@
 type SSEClient = {
   id: string;
-  controller: ReadableStreamDefaultController<Uint8Array>;
+  send: (event: string, data: unknown) => Promise<void>;
 };
 
 const clients = new Set<SSEClient>();
-const encoder = new TextEncoder();
 
 export function addClient(client: SSEClient) {
   clients.add(client);
@@ -14,15 +13,16 @@ export function removeClient(client: SSEClient) {
   clients.delete(client);
 }
 
-export function broadcast(event: string, data: unknown) {
-  const message = encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+export async function broadcast(event: string, data: unknown) {
+  const dead: SSEClient[] = [];
   for (const client of clients) {
     try {
-      client.controller.enqueue(message);
+      await client.send(event, data);
     } catch {
-      clients.delete(client);
+      dead.push(client);
     }
   }
+  for (const c of dead) clients.delete(c);
 }
 
 export function clientCount() {
