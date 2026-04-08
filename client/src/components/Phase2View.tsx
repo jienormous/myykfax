@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Masthead } from "./Masthead";
 import { api } from "../api";
 import type { Fact, Guest, Score } from "../types";
 
@@ -21,7 +22,6 @@ export function Phase2View({
     api.getGuests().then(setGuests);
   }, []);
 
-  // Reset result display when fact changes
   useEffect(() => {
     setLastResult(null);
   }, [currentFactId]);
@@ -33,51 +33,67 @@ export function Phase2View({
       setLastResult(correct);
       setGuessed((prev) => new Set(prev).add(currentFact.id));
     } catch {
-      // Already guessed or error
+      // already guessed
     }
   }
 
-  const hasGuessedCurrent = currentFact ? guessed.has(currentFact.id) : false;
+  const hasGuessed = currentFact ? guessed.has(currentFact.id) : false;
 
   return (
-    <div>
-      <h1>MYYKFAX — WHO SENT THIS?</h1>
+    <div className="app">
+      <Masthead sub="Who Sent This Fax?" />
 
-      <section>
+      {/* Current fact card */}
+      <div className="paper-card" style={{ marginBottom: "1.25rem" }}>
         {currentFact ? (
           <>
-            <blockquote>{currentFact.text}</blockquote>
+            <p className="section-label">Incoming transmission</p>
+            <p className="current-fact">{currentFact.text}</p>
 
-            {hasGuessedCurrent ? (
-              <p>{lastResult ? "CORRECT!" : "WRONG!"}</p>
+            {hasGuessed ? (
+              <p className={`guess-result ${lastResult ? "correct" : "wrong"}`}>
+                {lastResult ? "CORRECT ✓" : "WRONG ✗"}
+              </p>
             ) : (
-              <ul>
-                {guests.map((g) => (
-                  <li key={g.id}>
-                    <button onClick={() => handleGuess(g.id)}>{g.nickname}</button>
-                  </li>
-                ))}
-                <li>
-                  <button onClick={() => handleGuess(null)}>???</button>
-                </li>
-              </ul>
+              <>
+                <hr className="divider" style={{ margin: "0.75rem 0" }} />
+                <p className="section-label">Sender</p>
+                <div className="guess-grid">
+                  {guests.map((g) => (
+                    <button key={g.id} className="btn" onClick={() => handleGuess(g.id)}>
+                      {g.nickname}
+                    </button>
+                  ))}
+                  <button className="btn" onClick={() => handleGuess(null)}>???</button>
+                </div>
+              </>
             )}
           </>
         ) : (
-          <p>Waiting for next fax...</p>
+          <p style={{ textAlign: "center", color: "var(--ink-faded)", fontStyle: "italic", padding: "1rem 0" }}>
+            Waiting for next fax<span className="blink">_</span>
+          </p>
         )}
-      </section>
+      </div>
 
-      <section>
-        <h2>LEADERBOARD</h2>
-        <ol>
-          {scores.map((s, i) => (
-            <li key={s.nickname}>
-              {i + 1}. {s.nickname} — {s.score} pt{s.score !== 1 ? "s" : ""}
-            </li>
-          ))}
-        </ol>
-      </section>
+      {/* Leaderboard */}
+      {scores.length > 0 && (
+        <div>
+          <p className="section-label">Leaderboard</p>
+          <div className="paper-card">
+            {scores.map((s, i) => (
+              <div key={s.nickname} className="leaderboard-row">
+                <span>
+                  <span className="rank">{i + 1}.</span>
+                  {s.nickname}
+                  {s.nickname === guest.nickname ? " (you)" : ""}
+                </span>
+                <span className="score">{s.score} pt{s.score !== 1 ? "s" : ""}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

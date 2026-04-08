@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
+import { Masthead } from "./Masthead";
 import { api } from "../api";
 
 export function AdminView() {
   const [password, setPassword] = useState("");
   const [authed, setAuthed] = useState(false);
   const [authError, setAuthError] = useState(false);
-
   const [state, setState] = useState<any>(null);
   const [facts, setFacts] = useState<any[]>([]);
   const [newFactText, setNewFactText] = useState("");
@@ -32,9 +32,7 @@ export function AdminView() {
     setFacts(f);
   }
 
-  useEffect(() => {
-    if (authed) refresh();
-  }, [authed]);
+  useEffect(() => { if (authed) refresh(); }, [authed]);
 
   async function seedFact() {
     if (!newFactText.trim()) return;
@@ -46,6 +44,7 @@ export function AdminView() {
   async function broadcast() {
     const result = await api.admin.broadcast(password);
     setLastBroadcast(result.broadcast.text);
+    setTimeout(() => setLastBroadcast(null), 4000);
   }
 
   async function setPhase(phase: "0" | "1" | "2") {
@@ -66,97 +65,138 @@ export function AdminView() {
 
   if (!authed) {
     return (
-      <div>
-        <h1>MYYKFAX ADMIN</h1>
-        <form onSubmit={handleLogin}>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="admin password"
-            autoFocus
-          />
-          <button type="submit">ENTER</button>
-        </form>
-        {authError && <p>Wrong password.</p>}
+      <div className="app">
+        <Masthead sub="Admin Terminal" />
+        <div className="paper-card">
+          <p className="section-label">Authentication required</p>
+          <form onSubmit={handleLogin}>
+            <input
+              className="field"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="password"
+              autoFocus
+            />
+            <button className="btn btn--full" type="submit">ENTER</button>
+          </form>
+          {authError && <p style={{ marginTop: "0.5rem", color: "#a04040", fontSize: "0.82rem" }}>Access denied.</p>}
+        </div>
       </div>
     );
   }
 
-  const currentPhase = state?.gameState?.phase ?? "?";
+  const phase = state?.gameState?.phase ?? "?";
 
   return (
-    <div>
-      <h1>MYYKFAX ADMIN</h1>
-      <button onClick={refresh}>Refresh</button>
+    <div className="app">
+      <Masthead sub="Admin Terminal" />
 
-      <section>
-        <h2>Status</h2>
-        <p>Phase: {currentPhase} | Guests: {state?.guestCount} | Facts: {state?.factCount}</p>
-      </section>
+      {/* Status */}
+      <div className="paper-card" style={{ marginBottom: "1rem" }}>
+        <div className="status-row">
+          <span>Phase: <strong>{phase}</strong></span>
+          <span>Guests: <strong>{state?.guestCount ?? "—"}</strong></span>
+          <span>Facts: <strong>{state?.factCount ?? "—"}</strong></span>
+        </div>
+      </div>
 
-      <section>
-        <h2>Phase Control</h2>
-        <button onClick={() => setPhase("0")} disabled={currentPhase === "0"}>Phase 0 (Pre-party)</button>
-        <button onClick={() => setPhase("1")} disabled={currentPhase === "1"}>Phase 1 (Submission)</button>
-        <button onClick={() => setPhase("2")} disabled={currentPhase === "2"}>Phase 2 (Guessing)</button>
-      </section>
+      {/* Phase control */}
+      <p className="section-label">Phase control</p>
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+        {(["0", "1", "2"] as const).map((p) => (
+          <button key={p} className="btn" disabled={phase === p} onClick={() => setPhase(p)}
+            style={{ flex: 1 }}>
+            Phase {p}
+          </button>
+        ))}
+      </div>
 
-      {currentPhase === "1" && (
-        <section>
-          <h2>Broadcast</h2>
-          <button onClick={broadcast}>Broadcast Random Fax</button>
-          {lastBroadcast && <p>Sent: "{lastBroadcast}"</p>}
-        </section>
+      {/* Broadcast */}
+      {phase === "1" && (
+        <>
+          <p className="section-label">Broadcast</p>
+          <div style={{ marginBottom: "1rem" }}>
+            <button className="btn btn--full" onClick={broadcast}>
+              Broadcast Random Fax
+            </button>
+            {lastBroadcast && (
+              <p style={{ fontSize: "0.78rem", color: "var(--ink-faded)", marginTop: "0.4rem", fontStyle: "italic" }}>
+                Sent: "{lastBroadcast}"
+              </p>
+            )}
+          </div>
+        </>
       )}
 
-      {currentPhase === "2" && (
-        <section>
-          <h2>Reveal</h2>
-          <button onClick={revealNext}>Reveal Next Fact</button>
-          {lastRevealed && (
-            <p>
-              Revealed: "{lastRevealed.text}" — submitted by {lastRevealed.submitter}
-            </p>
-          )}
-        </section>
+      {/* Reveal */}
+      {phase === "2" && (
+        <>
+          <p className="section-label">Reveal next fact</p>
+          <div style={{ marginBottom: "1rem" }}>
+            <button className="btn btn--full" onClick={revealNext}>
+              Reveal Next Fact →
+            </button>
+            {lastRevealed && (
+              <div className="paper-card" style={{ marginTop: "0.5rem", fontSize: "0.82rem" }}>
+                <p>"{lastRevealed.text}"</p>
+                <p className="meta">submitted by {lastRevealed.submitter}</p>
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      <section>
-        <h2>Seed a Fact</h2>
+      {/* Scores */}
+      {state?.scores?.length > 0 && (
+        <>
+          <p className="section-label">Scores</p>
+          <div className="paper-card" style={{ marginBottom: "1rem" }}>
+            {state.scores.map((s: any, i: number) => (
+              <div key={s.nickname} className="leaderboard-row">
+                <span><span className="rank">{i + 1}.</span>{s.nickname}</span>
+                <span className="score">{s.score}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <hr className="divider" />
+
+      {/* Seed fact */}
+      <p className="section-label">Seed a fact</p>
+      <div style={{ marginBottom: "1.25rem" }}>
         <textarea
+          className="field"
           value={newFactText}
           onChange={(e) => setNewFactText(e.target.value)}
           placeholder="Pre-seed a Myykfact..."
           rows={2}
           maxLength={280}
         />
-        <button onClick={seedFact} disabled={!newFactText.trim()}>Add Fact</button>
-      </section>
+        <div className="char-count">{newFactText.length}/280</div>
+        <button className="btn btn--full" onClick={seedFact} disabled={!newFactText.trim()}>
+          Add Seeded Fact
+        </button>
+      </div>
 
-      <section>
-        <h2>All Facts ({facts.length})</h2>
-        <ul>
-          {facts.map((f) => (
-            <li key={f.id}>
-              [{f.is_preseeded ? "seed" : f.submitter_nickname ?? "?"}]
-              {f.is_revealed ? " ✓" : ""} {f.text}
-              <button onClick={() => deleteFact(f.id)}>Delete</button>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {/* Facts list */}
+      <p className="section-label">All facts ({facts.length})</p>
+      <div className="paper-card">
+        {facts.length === 0 && <p style={{ color: "var(--ink-faded)", fontSize: "0.82rem" }}>No facts yet.</p>}
+        {facts.map((f) => (
+          <div key={f.id} className="admin-fact-row">
+            <span className="tag">[{f.is_preseeded ? "seed" : f.submitter_nickname ?? "?"}]{f.is_revealed ? "✓" : ""}</span>
+            <span className="text">{f.text}</span>
+            <button className="btn btn--small btn--danger" onClick={() => deleteFact(f.id)}>✕</button>
+          </div>
+        ))}
+      </div>
 
-      {state?.scores?.length > 0 && (
-        <section>
-          <h2>Scores</h2>
-          <ol>
-            {state.scores.map((s: any) => (
-              <li key={s.nickname}>{s.nickname}: {s.score}</li>
-            ))}
-          </ol>
-        </section>
-      )}
+      <div style={{ marginTop: "1rem" }}>
+        <button className="btn btn--small" onClick={refresh}>↻ Refresh</button>
+      </div>
     </div>
   );
 }

@@ -17,8 +17,9 @@ app.route("/api/sse", sseRouter);
 app.get("/api/health", (c) => c.json({ ok: true }));
 
 // Serve built client
-app.use("/*", serveStatic({ root: "./public" }));
-app.get("/*", serveStatic({ path: "./public/index.html" }));
+const publicDir = import.meta.dir + "/public";
+app.use("/*", serveStatic({ root: publicDir }));
+app.get("/*", serveStatic({ path: publicDir + "/index.html" }));
 
 const port = Number(process.env.PORT ?? 3000);
 console.log(`Myykfax running on http://localhost:${port}`);
