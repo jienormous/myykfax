@@ -1,7 +1,9 @@
 import { Database } from "bun:sqlite";
-import { join } from "path";
+import { join, dirname } from "path";
+import { mkdirSync } from "fs";
 
 const dbPath = process.env.DB_PATH ?? join(import.meta.dir, "..", "myykfax.db");
+mkdirSync(dirname(dbPath), { recursive: true });
 export const db = new Database(dbPath);
 
 db.exec("PRAGMA journal_mode=WAL;");
