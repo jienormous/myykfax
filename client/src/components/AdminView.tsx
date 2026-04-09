@@ -9,7 +9,7 @@ export function AdminView() {
   const [state, setState] = useState<any>(null);
   const [facts, setFacts] = useState<any[]>([]);
   const [newFactText, setNewFactText] = useState("");
-  const [newFactAuthor, setNewFactAuthor] = useState<number | "">("");
+  const [newFactAuthor, setNewFactAuthor] = useState("");
   const [lastBroadcast, setLastBroadcast] = useState<string | null>(null);
   const [lastRevealed, setLastRevealed] = useState<{ text: string; submitter: string } | null>(null);
 
@@ -30,7 +30,7 @@ export function AdminView() {
 
   async function seedFact() {
     if (!newFactText.trim()) return;
-    await api.admin.seedFact(newFactText.trim(), password, newFactAuthor || null);
+    await api.admin.seedFact(newFactText.trim(), password, newFactAuthor.trim() || null);
     setNewFactText(""); setNewFactAuthor(""); refresh();
   }
 
@@ -139,14 +139,13 @@ export function AdminView() {
             onChange={(e) => setNewFactText(e.target.value)}
             placeholder="Pre-seed a Myykfact..." rows={2} maxLength={280} />
           <div className="char-count">{newFactText.length}/280</div>
-          <select className="field" style={{ marginTop: "0.5rem" }}
+          <input className="field" style={{ marginTop: "0.5rem" }}
             value={newFactAuthor}
-            onChange={(e) => setNewFactAuthor(e.target.value ? Number(e.target.value) : "")}>
-            <option value="">author: mystery (???)</option>
-            {(state?.guests ?? []).map((g: any) => (
-              <option key={g.id} value={g.id}>{g.nickname}</option>
-            ))}
-          </select>
+            onChange={(e) => setNewFactAuthor(e.target.value)}
+            placeholder="author name"
+            maxLength={32}
+            autoComplete="off"
+          />
           <button className="btn btn--full" onClick={seedFact} disabled={!newFactText.trim()}>
             Add Seeded Fact
           </button>

@@ -17,14 +17,22 @@ adminRouter.use("/*", auth);
 
 // Pre-seed a fact
 adminRouter.post("/facts", async (c) => {
-  const { text, submittedBy } = await c.req.json<{ text: string; submittedBy?: number | null }>();
+  const { text, authorName } = await c.req.json<{ text: string; authorName?: string | null }>();
   if (!text?.trim()) return c.json({ error: "Text required" }, 400);
+
+  let submittedBy: number | null = null;
+  if (authorName?.trim()) {
+    // Upsert guest by name
+    db.query("INSERT OR IGNORE INTO guests (nickname) VALUES (?)").run(authorName.trim().slice(0, 32));
+    const guest = db.query<{ id: number }, [string]>("SELECT id FROM guests WHERE nickname = ? COLLATE NOCASE").get(authorName.trim());
+    submittedBy = guest?.id ?? null;
+  }
 
   const result = db
     .query<{ id: number }, [string, number | null]>(
       "INSERT INTO facts (text, submitted_by, is_preseeded) VALUES (?, ?, 1) RETURNING id"
     )
-    .get(text.trim().slice(0, 280), submittedBy ?? null);
+    .get(text.trim().slice(0, 280), submittedBy);
 
   return c.json({ id: result!.id });
 });
