@@ -27,27 +27,27 @@ export function NicknameGate({ onJoin }: { onJoin: (guest: Guest) => void }) {
   return (
     <div className="app">
       <Masthead />
-
-      <FaxMachine size={160} />
-
-      <div style={{ marginTop: "1.5rem" }}>
-        <div className="paper-card">
-          <p className="section-label">Identify yourself</p>
-          <form onSubmit={handleSubmit}>
-            <input
-              className="field"
-              value={nickname}
-              onChange={(e) => setNickname(e.target.value)}
-              placeholder="your name"
-              maxLength={32}
-              autoFocus
-              autoComplete="off"
-            />
-            <button className="btn btn--full" type="submit" disabled={loading || !nickname.trim()}>
-              {loading ? "Connecting..." : "Connect to Myykfax"}
-            </button>
-          </form>
-          {error && <p style={{ marginTop: "0.5rem", color: "#a04040", fontSize: "0.82rem" }}>{error}</p>}
+      <div className="app-body">
+        <FaxMachine size={374} />
+        <div style={{ marginTop: "1.5rem" }}>
+          <div className="paper-card">
+            <p className="section-label">Identify yourself</p>
+            <form onSubmit={handleSubmit}>
+              <input
+                className="field"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                placeholder="your name"
+                maxLength={32}
+                autoFocus
+                autoComplete="off"
+              />
+              <button className="btn btn--full" type="submit" disabled={loading || !nickname.trim()}>
+                {loading ? "Connecting..." : "Connect to Myykfax"}
+              </button>
+            </form>
+            {error && <p style={{ marginTop: "0.5rem", color: "#7a3030", fontSize: "0.82rem" }}>{error}</p>}
+          </div>
         </div>
       </div>
     </div>
