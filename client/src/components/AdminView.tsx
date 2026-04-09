@@ -155,9 +155,10 @@ export function AdminView() {
         <div className="paper-card">
           {facts.length === 0 && <p style={{ color: "var(--ink-faded)", fontSize: "0.82rem" }}>No facts yet.</p>}
           {facts.map((f) => (
-            <div key={f.id} className="admin-fact-row">
-              <span className="tag">[{f.is_preseeded ? "seed" : f.submitter_nickname ?? "?"}]{f.is_revealed ? " ✓" : ""}</span>
+            <div key={f.id} className="admin-fact-row" style={f.is_revealed ? { opacity: 0.45 } : undefined}>
+              <span className="tag">[{f.is_preseeded ? "seed" : f.submitter_nickname ?? "?"}]</span>
               <span className="text">{f.text}</span>
+              {f.is_revealed ? <span style={{ fontSize: "0.62rem", color: "#1e5a1e", whiteSpace: "nowrap" }}>revealed ✓</span> : null}
               <button className="btn btn--small btn--danger"
                 onClick={() => api.admin.deleteFact(f.id, password).then(refresh)}>✕</button>
             </div>
