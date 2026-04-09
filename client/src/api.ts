@@ -42,11 +42,11 @@ export const api = {
   },
 
   admin: {
-    async seedFact(text: string, password: string): Promise<{ id: number }> {
+    async seedFact(text: string, password: string, submittedBy?: number | null): Promise<{ id: number }> {
       const res = await fetch(`${BASE}/admin/facts`, {
         method: "POST",
         headers: adminHeaders(password),
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, submittedBy: submittedBy ?? null }),
       });
       if (!res.ok) throw new Error(await res.text());
       return res.json();

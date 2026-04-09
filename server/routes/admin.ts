@@ -17,14 +17,14 @@ adminRouter.use("/*", auth);
 
 // Pre-seed a fact
 adminRouter.post("/facts", async (c) => {
-  const { text } = await c.req.json<{ text: string }>();
+  const { text, submittedBy } = await c.req.json<{ text: string; submittedBy?: number | null }>();
   if (!text?.trim()) return c.json({ error: "Text required" }, 400);
 
   const result = db
-    .query<{ id: number }, [string]>(
-      "INSERT INTO facts (text, is_preseeded) VALUES (?, 1) RETURNING id"
+    .query<{ id: number }, [string, number | null]>(
+      "INSERT INTO facts (text, submitted_by, is_preseeded) VALUES (?, ?, 1) RETURNING id"
     )
-    .get(text.trim().slice(0, 280));
+    .get(text.trim().slice(0, 280), submittedBy ?? null);
 
   return c.json({ id: result!.id });
 });
@@ -97,6 +97,7 @@ adminRouter.get("/state", (c) => {
   return c.json({
     gameState: queries.getGameState.get(),
     scores: queries.getScores.all(),
+    guests: queries.getGuests.all(),
     guestCount: (db.query("SELECT COUNT(*) as n FROM guests").get() as { n: number }).n,
     factCount: (db.query("SELECT COUNT(*) as n FROM facts").get() as { n: number }).n,
   });
