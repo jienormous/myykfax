@@ -31,7 +31,6 @@ export function Phase1View({ guest, inbox }: { guest: Guest; inbox: Fact[] }) {
 
     try {
       await api.submitFact(text.trim(), guest.id);
-      // Let paper feed for a moment, then eject
       setTimeout(() => {
         setSendState("ejecting");
         setTimeout(() => {
@@ -51,68 +50,64 @@ export function Phase1View({ guest, inbox }: { guest: Guest; inbox: Fact[] }) {
   return (
     <div className="app">
       <Masthead />
+      <div className="app-body">
+        <FaxMachine size={130} />
 
-      <FaxMachine size={110} />
+        <hr className="divider" style={{ marginTop: "1.25rem" }} />
 
-      <hr className="divider" />
+        <div className="paper-card" style={{ marginBottom: "1.5rem" }}>
+          <p className="section-label">Send a Myykfact</p>
+          <form onSubmit={handleSubmit}>
+            <textarea
+              className="field"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Something true about Myyk..."
+              maxLength={280}
+              rows={3}
+              disabled={isSending}
+            />
+            <div className="char-count">{text.length}/280</div>
 
-      {/* Submit form */}
-      <div style={{ marginBottom: "1.5rem" }}>
-        <p className="section-label">Send a Myykfact</p>
-        <form onSubmit={handleSubmit}>
-          <textarea
-            className="field"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Something true about Myyk..."
-            maxLength={280}
-            rows={3}
-            disabled={isSending}
-          />
-          <div className="char-count">{text.length}/280</div>
+            <div
+              className={`paper-feed-wrap ${
+                sendState === "feeding" ? "feeding" :
+                sendState === "ejecting" ? "ejecting" : ""
+              }`}
+              style={{ maxHeight: sendState === "idle" || sendState === "sent" || sendState === "error" ? 0 : undefined }}
+            >
+              <div className="paper-feed">{feedText}</div>
+            </div>
 
-          {/* Paper feed animation */}
-          <div
-            className={`paper-feed-wrap ${
-              sendState === "feeding" ? "feeding" :
-              sendState === "ejecting" ? "ejecting" : ""
-            }`}
-            style={{ maxHeight: sendState === "idle" || sendState === "sent" || sendState === "error" ? 0 : undefined }}
-          >
-            <div className="paper-feed">{feedText}</div>
-          </div>
-
-          <button className="btn btn--full" type="submit" disabled={isSending || !text.trim()}>
-            {sendState === "feeding"  ? "SENDING FAX..." :
-             sendState === "ejecting" ? "TRANSMITTING..." :
-             sendState === "sent"     ? "FAX SENT ✓" :
-             sendState === "error"    ? "TRANSMISSION FAILED" :
-             "SEND FAX"}
-          </button>
-        </form>
-      </div>
-
-      <hr className="divider" />
-
-      {/* Inbox */}
-      <div>
-        <div className="inbox-header" onClick={clearUnread} style={{ cursor: "pointer" }}>
-          <p className="section-label" style={{ marginBottom: 0 }}>Inbox</p>
-          {unread > 0 && (
-            <span className="unread-badge">{unread} NEW</span>
-          )}
+            <button className="btn btn--full" type="submit" disabled={isSending || !text.trim()}>
+              {sendState === "feeding"  ? "Sending Fax..." :
+               sendState === "ejecting" ? "Transmitting..." :
+               sendState === "sent"     ? "Fax Sent ✓" :
+               sendState === "error"    ? "Transmission Failed" :
+               "Send Fax"}
+            </button>
+          </form>
         </div>
 
-        {inbox.length === 0 ? (
-          <p className="inbox-empty">No faxes received yet. Stand by.</p>
-        ) : (
-          inbox.map((fact) => (
-            <div key={fact.id} className="paper-card inbox-card">
-              <p>{fact.text}</p>
-              <p className="meta">— received via Myykfax 3000</p>
-            </div>
-          ))
-        )}
+        <hr className="divider" />
+
+        <div>
+          <div className="inbox-header" onClick={clearUnread} style={{ cursor: "pointer" }}>
+            <p className="section-label" style={{ marginBottom: 0 }}>Inbox</p>
+            {unread > 0 && <span className="unread-badge">{unread} new</span>}
+          </div>
+
+          {inbox.length === 0 ? (
+            <p className="inbox-empty">No faxes received yet. Stand by.</p>
+          ) : (
+            inbox.map((fact) => (
+              <div key={fact.id} className="paper-card inbox-card">
+                <p>{fact.text}</p>
+                <p className="meta">— received via Myykfax 3000</p>
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
