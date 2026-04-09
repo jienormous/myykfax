@@ -4,3 +4,5 @@ dist/
 *.db
 *.db-shm
 *.db-wal
+server/public/assets/
+server/public/index.html
