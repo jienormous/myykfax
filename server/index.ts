@@ -21,7 +21,6 @@ const publicDir = import.meta.dir + "/public";
 app.use("/*", serveStatic({ root: publicDir }));
 app.get("/*", async (c) => {
   const html = await Bun.file(publicDir + "/index.html").text();
-  c.header("Cache-Control", "no-cache, no-store, must-revalidate");
   return c.html(html);
 });
 
