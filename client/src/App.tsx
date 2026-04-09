@@ -34,6 +34,7 @@ export function App() {
     switch (event.type) {
       case "init":
         setGameState(event.data.state);
+        if (event.data.currentFact) setCurrentFact(event.data.currentFact);
         break;
       case "phase_change":
         setGameState((s) => ({ ...s, phase: event.data.phase }));

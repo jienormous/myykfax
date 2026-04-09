@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { addClient, removeClient } from "../sse";
-import { queries } from "../db";
+import { db, queries } from "../db";
 
 export const sseRouter = new Hono();
 
@@ -19,7 +19,10 @@ sseRouter.get("/", (c) => {
 
     // Send current game state immediately on connect
     const state = queries.getGameState.get();
-    await stream.writeSSE({ event: "init", data: JSON.stringify({ state }) });
+    const currentFact = state?.current_fact_id
+      ? db.query<{ id: number; text: string }, [number]>("SELECT id, text FROM facts WHERE id = ?").get(state.current_fact_id)
+      : null;
+    await stream.writeSSE({ event: "init", data: JSON.stringify({ state, currentFact }) });
 
     // Keep open until client disconnects
     await new Promise<void>((resolve) => {
