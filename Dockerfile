@@ -9,6 +9,7 @@ RUN cd server && bun install
 
 COPY . .
 RUN cd client && bun run build
+RUN cp client/public/fax-machine.png server/public/fax-machine.png
 
 EXPOSE 3000
 CMD ["bun", "run", "server/index.ts"]
