@@ -19,7 +19,10 @@ app.get("/api/health", (c) => c.json({ ok: true }));
 // Serve built client
 const publicDir = import.meta.dir + "/public";
 app.use("/*", serveStatic({ root: publicDir }));
-app.get("/*", serveStatic({ path: publicDir + "/index.html" }));
+app.get("/*", async (c) => {
+  const html = await Bun.file(publicDir + "/index.html").text();
+  return c.html(html);
+});
 
 const port = Number(process.env.PORT ?? 3000);
 console.log(`Myykfax running on http://localhost:${port}`);
