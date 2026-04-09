@@ -28,7 +28,7 @@ export function NicknameGate({ onJoin }: { onJoin: (guest: Guest) => void }) {
     <div className="app">
       <Masthead />
       <div className="app-body">
-        <FaxMachine size={374} />
+        <FaxMachine size={340} />
         <div style={{ marginTop: "1.5rem" }}>
           <div className="paper-card">
             <p className="section-label">Identify yourself</p>
