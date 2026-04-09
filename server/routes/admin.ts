@@ -53,7 +53,10 @@ adminRouter.get("/facts", (c) => {
 
 // Delete a fact
 adminRouter.delete("/facts/:id", (c) => {
-  db.query("DELETE FROM facts WHERE id = ?").run(Number(c.req.param("id")));
+  const id = Number(c.req.param("id"));
+  db.query("DELETE FROM guesses WHERE fact_id = ?").run(id);
+  db.query("UPDATE game_state SET current_fact_id = NULL WHERE current_fact_id = ?").run(id);
+  db.query("DELETE FROM facts WHERE id = ?").run(id);
   return c.json({ ok: true });
 });
 
