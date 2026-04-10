@@ -5,11 +5,14 @@ import { Masthead } from "./Masthead";
 import type { Fact, Guest } from "../types";
 
 type SendState = "idle" | "feeding" | "ejecting" | "sent" | "error";
+type IncomingState = "idle" | "feeding" | "ejecting";
 
 export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbox: Fact[]; onReceiveFact: (fact: Fact) => void }) {
   const [text, setText] = useState("");
   const [sendState, setSendState] = useState<SendState>("idle");
   const [feedText, setFeedText] = useState("");
+  const [incomingState, setIncomingState] = useState<IncomingState>("idle");
+  const [incomingText, setIncomingText] = useState("");
   const [unread, setUnread] = useState(0);
   const prevInboxLen = useRef(inbox.length);
 
@@ -21,6 +24,18 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
   }, [inbox.length]);
 
   function clearUnread() { setUnread(0); }
+
+  function playIncoming(fact: Fact) {
+    setIncomingText(fact.text);
+    setIncomingState("feeding");
+    setTimeout(() => {
+      setIncomingState("ejecting");
+      setTimeout(() => {
+        setIncomingState("idle");
+        onReceiveFact(fact);
+      }, 400);
+    }, 1400);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -37,7 +52,7 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
           setText("");
           setSendState("sent");
           if (receivedFact) {
-            setTimeout(() => onReceiveFact(receivedFact as Fact), 600);
+            setTimeout(() => playIncoming(receivedFact as Fact), 600);
           }
           setTimeout(() => setSendState("idle"), 1800);
         }, 450);
@@ -55,6 +70,16 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
       <Masthead />
       <div className="app-body">
         <FaxMachine size={130} />
+
+        <div
+          className={`paper-feed-wrap ${
+            incomingState === "feeding" ? "feeding" :
+            incomingState === "ejecting" ? "ejecting" : ""
+          }`}
+          style={{ maxHeight: incomingState === "idle" ? 0 : undefined }}
+        >
+          <div className="paper-feed">{incomingText}</div>
+        </div>
 
         <hr className="divider" style={{ marginTop: "1.25rem" }} />
 
