@@ -84,7 +84,7 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
         <hr className="divider" style={{ marginTop: "1.25rem" }} />
 
         <div className="paper-card" style={{ marginBottom: "1.5rem" }}>
-          <p className="section-label">Send a Myykfact</p>
+          <p className="section-label">Send a myykfact, receive a myykfact</p>
           <form onSubmit={handleSubmit}>
             <textarea
               className="field"
