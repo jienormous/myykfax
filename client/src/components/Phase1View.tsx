@@ -4,7 +4,7 @@ import { FaxMachine } from "./FaxMachine";
 import { Masthead } from "./Masthead";
 import type { Fact, Guest } from "../types";
 
-type SendState = "idle" | "feeding" | "ejecting" | "sent" | "error";
+type SendState = "idle" | "feeding" | "ejecting" | "sent" | "sent-no-fax" | "error";
 type IncomingState = "idle" | "feeding" | "ejecting";
 
 export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbox: Fact[]; onReceiveFact: (fact: Fact) => void }) {
@@ -45,12 +45,13 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
     setSendState("feeding");
 
     try {
-      const { receivedFact } = await api.submitFact(text.trim(), guest.id);
+      const excludeIds = inbox.map((f) => f.id);
+      const { receivedFact } = await api.submitFact(text.trim(), guest.id, excludeIds);
       setTimeout(() => {
         setSendState("ejecting");
         setTimeout(() => {
           setText("");
-          setSendState("sent");
+          setSendState(receivedFact ? "sent" : "sent-no-fax");
           if (receivedFact) {
             setTimeout(() => playIncoming(receivedFact as Fact), 600);
           }
@@ -64,6 +65,7 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
   }
 
   const isSending = sendState === "feeding" || sendState === "ejecting";
+  const noFaxAvailable = sendState === "sent-no-fax";
 
   return (
     <div className="app">
@@ -84,7 +86,7 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
         <hr className="divider" style={{ marginTop: "1.25rem" }} />
 
         <div className="paper-card" style={{ marginBottom: "1.5rem" }}>
-          <p className="section-label">Send a myykfact, receive a myykfact</p>
+          <p className="section-label">Send a fact, receive a fact</p>
           <form onSubmit={handleSubmit}>
             <textarea
               className="field"
@@ -108,12 +110,18 @@ export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbo
             </div>
 
             <button className="btn btn--full" type="submit" disabled={isSending || !text.trim()}>
-              {sendState === "feeding"  ? "Sending Fax..." :
-               sendState === "ejecting" ? "Transmitting..." :
-               sendState === "sent"     ? "Fax Sent ✓" :
-               sendState === "error"    ? "Transmission Failed" :
+              {sendState === "feeding"     ? "Sending Fax..." :
+               sendState === "ejecting"    ? "Transmitting..." :
+               sendState === "sent"        ? "Fax Sent ✓" :
+               sendState === "sent-no-fax" ? "Fax Sent ✓" :
+               sendState === "error"       ? "Transmission Failed" :
                "Send Fax"}
             </button>
+            {noFaxAvailable && (
+              <p style={{ fontSize: "0.72rem", color: "var(--ink-faded)", marginTop: "0.4rem", fontStyle: "italic", textAlign: "center" }}>
+                No new faxes to receive yet — send more!
+              </p>
+            )}
           </form>
         </div>
 

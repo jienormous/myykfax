@@ -21,11 +21,11 @@ export const api = {
     return fetch(`${BASE}/guests`).then((r) => r.json());
   },
 
-  async submitFact(text: string, guestId: number): Promise<{ id: number; receivedFact: { id: number; text: string } | null }> {
+  async submitFact(text: string, guestId: number, excludeIds: number[] = []): Promise<{ id: number; receivedFact: { id: number; text: string } | null }> {
     const res = await fetch(`${BASE}/facts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, guestId }),
+      body: JSON.stringify({ text, guestId, excludeIds }),
     });
     if (!res.ok) throw new Error(await res.text());
     return res.json();

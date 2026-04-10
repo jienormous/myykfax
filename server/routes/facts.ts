@@ -5,7 +5,7 @@ export const factsRouter = new Hono();
 
 // Submit a fact (Phase 1 guests)
 factsRouter.post("/", async (c) => {
-  const { text, guestId } = await c.req.json<{ text: string; guestId: number }>();
+  const { text, guestId, excludeIds = [] } = await c.req.json<{ text: string; guestId: number; excludeIds?: number[] }>();
 
   if (!text?.trim()) return c.json({ error: "Fact text is required" }, 400);
   if (!guestId) return c.json({ error: "Guest ID is required" }, 400);
@@ -22,12 +22,14 @@ factsRouter.post("/", async (c) => {
     )
     .get(text.trim().slice(0, 280), guestId);
 
-  // Return a random fact from someone else as a "fax back"
+  // Return a random fact from someone else, excluding already-seen facts and the one just submitted
+  const excluded = [...excludeIds, result!.id];
+  const placeholders = excluded.map(() => "?").join(", ");
   const receivedFact = db
-    .query<{ id: number; text: string }, [number, number]>(
-      "SELECT id, text FROM facts WHERE submitted_by != ? AND id != ? AND is_preseeded = 0 ORDER BY RANDOM() LIMIT 1"
+    .query<{ id: number; text: string }, unknown[]>(
+      `SELECT id, text FROM facts WHERE submitted_by != ? AND id NOT IN (${placeholders}) AND is_preseeded = 0 ORDER BY RANDOM() LIMIT 1`
     )
-    .get(guestId, result!.id) ?? null;
+    .get(guestId, ...excluded) ?? null;
 
   return c.json({ id: result!.id, receivedFact });
 });
