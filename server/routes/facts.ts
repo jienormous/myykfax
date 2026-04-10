@@ -22,7 +22,14 @@ factsRouter.post("/", async (c) => {
     )
     .get(text.trim().slice(0, 280), guestId);
 
-  return c.json({ id: result!.id });
+  // Return a random fact from someone else as a "fax back"
+  const receivedFact = db
+    .query<{ id: number; text: string }, [number, number]>(
+      "SELECT id, text FROM facts WHERE submitted_by != ? AND id != ? AND is_preseeded = 0 ORDER BY RANDOM() LIMIT 1"
+    )
+    .get(guestId, result!.id) ?? null;
+
+  return c.json({ id: result!.id, receivedFact });
 });
 
 // List facts — no submitter info exposed to guests

@@ -6,7 +6,7 @@ import type { Fact, Guest } from "../types";
 
 type SendState = "idle" | "feeding" | "ejecting" | "sent" | "error";
 
-export function Phase1View({ guest, inbox }: { guest: Guest; inbox: Fact[] }) {
+export function Phase1View({ guest, inbox, onReceiveFact }: { guest: Guest; inbox: Fact[]; onReceiveFact: (fact: Fact) => void }) {
   const [text, setText] = useState("");
   const [sendState, setSendState] = useState<SendState>("idle");
   const [feedText, setFeedText] = useState("");
@@ -30,12 +30,15 @@ export function Phase1View({ guest, inbox }: { guest: Guest; inbox: Fact[] }) {
     setSendState("feeding");
 
     try {
-      await api.submitFact(text.trim(), guest.id);
+      const { receivedFact } = await api.submitFact(text.trim(), guest.id);
       setTimeout(() => {
         setSendState("ejecting");
         setTimeout(() => {
           setText("");
           setSendState("sent");
+          if (receivedFact) {
+            setTimeout(() => onReceiveFact(receivedFact as Fact), 600);
+          }
           setTimeout(() => setSendState("idle"), 1800);
         }, 450);
       }, 1200);

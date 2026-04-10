@@ -21,7 +21,7 @@ export const api = {
     return fetch(`${BASE}/guests`).then((r) => r.json());
   },
 
-  async submitFact(text: string, guestId: number): Promise<{ id: number }> {
+  async submitFact(text: string, guestId: number): Promise<{ id: number; receivedFact: { id: number; text: string } | null }> {
     const res = await fetch(`${BASE}/facts`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

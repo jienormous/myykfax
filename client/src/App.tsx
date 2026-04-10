@@ -69,7 +69,7 @@ export function App() {
   const phase = gameState.phase as Phase;
 
   if (phase === "0") return <Phase0View />;
-  if (phase === "1") return <Phase1View guest={guest} inbox={inbox} />;
+  if (phase === "1") return <Phase1View guest={guest} inbox={inbox} onReceiveFact={(fact) => setInbox((prev) => [fact, ...prev])} />;
   if (phase === "2") {
     return (
       <Phase2View
