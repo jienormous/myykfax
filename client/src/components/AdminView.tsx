@@ -165,9 +165,19 @@ export function AdminView() {
           ))}
         </div>
 
-        <div style={{ marginTop: "1rem" }}>
+        <div style={{ marginTop: "1rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
           <button className="btn btn--small" onClick={refresh}>↻ Refresh</button>
         </div>
+
+        <hr className="divider" style={{ marginTop: "1.5rem" }} />
+
+        <p className="section-label">Export</p>
+        <button className="btn btn--full" onClick={() => api.admin.exportAll(password)}>
+          ⬇ Download All Myykfaxes
+        </button>
+        <p style={{ fontSize: "0.72rem", color: "var(--ink-faded)", marginTop: "0.4rem", fontStyle: "italic" }}>
+          Saves a .txt file with every fact, its author, and the final leaderboard.
+        </p>
       </div>
     </div>
   );

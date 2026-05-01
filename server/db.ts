@@ -67,4 +67,10 @@ export const queries = {
   getNextUnrevealedFact: db.query<Fact, []>(
     "SELECT * FROM facts WHERE is_revealed = 0 ORDER BY RANDOM() LIMIT 1"
   ),
+
+  countUnrevealed: db.query<{ n: number }, []>(
+    "SELECT COUNT(*) as n FROM facts WHERE is_revealed = 0"
+  ),
+
+  countFacts: db.query<{ n: number }, []>("SELECT COUNT(*) as n FROM facts"),
 };

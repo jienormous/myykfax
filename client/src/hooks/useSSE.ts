@@ -14,6 +14,7 @@ export function useSSE(onEvent: (event: SSEEvent) => void) {
       "phase_change",
       "fax_broadcast",
       "fact_revealed",
+      "quiz_complete",
       "leaderboard_update",
       "guest_joined",
     ];

@@ -29,21 +29,28 @@ export function App() {
   const [inbox, setInbox] = useState<Fact[]>([]);
   const [currentFact, setCurrentFact] = useState<Fact | null>(null);
   const [scores, setScores] = useState<Score[]>([]);
+  const [quizComplete, setQuizComplete] = useState(false);
 
   const handleSSE = useCallback((event: SSEEvent) => {
     switch (event.type) {
       case "init":
         setGameState(event.data.state);
         if (event.data.currentFact) setCurrentFact(event.data.currentFact);
+        setQuizComplete(event.data.quizComplete);
         break;
       case "phase_change":
         setGameState((s) => ({ ...s, phase: event.data.phase }));
+        if (event.data.phase !== "2") setQuizComplete(false);
         break;
       case "fax_broadcast":
         setInbox((prev) => [event.data.fact, ...prev]);
         break;
       case "fact_revealed":
         setCurrentFact(event.data.fact);
+        setQuizComplete(false);
+        break;
+      case "quiz_complete":
+        setQuizComplete(true);
         break;
       case "leaderboard_update":
         setScores(event.data.scores);
@@ -76,7 +83,7 @@ export function App() {
         guest={guest}
         currentFact={currentFact}
         scores={scores}
-        currentFactId={gameState.current_fact_id}
+        quizComplete={quizComplete}
       />
     );
   }

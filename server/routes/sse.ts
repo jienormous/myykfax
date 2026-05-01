@@ -22,7 +22,13 @@ sseRouter.get("/", (c) => {
     const currentFact = state?.current_fact_id
       ? db.query<{ id: number; text: string }, [number]>("SELECT id, text FROM facts WHERE id = ?").get(state.current_fact_id)
       : null;
-    await stream.writeSSE({ event: "init", data: JSON.stringify({ state, currentFact }) });
+    const totalFacts = queries.countFacts.get()?.n ?? 0;
+    const unrevealed = queries.countUnrevealed.get()?.n ?? 0;
+    const quizComplete = state?.phase === "2" && totalFacts > 0 && unrevealed === 0;
+    await stream.writeSSE({
+      event: "init",
+      data: JSON.stringify({ state, currentFact, quizComplete }),
+    });
 
     // Keep open until client disconnects
     await new Promise<void>((resolve) => {

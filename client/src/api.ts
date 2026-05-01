@@ -101,5 +101,24 @@ export const api = {
       if (!res.ok) throw new Error(await res.text());
       return res.json();
     },
+
+    async exportAll(password: string): Promise<void> {
+      const res = await fetch(`${BASE}/admin/export`, {
+        headers: adminHeaders(password),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const blob = await res.blob();
+      const filename =
+        res.headers.get("content-disposition")?.match(/filename="([^"]+)"/)?.[1] ??
+        `myykfax-export-${new Date().toISOString().slice(0, 10)}.txt`;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    },
   },
 };

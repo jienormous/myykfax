@@ -85,7 +85,10 @@ adminRouter.post("/reveal", (c) => {
   if (state.phase !== "2") return c.json({ error: "Not in Phase 2" }, 403);
 
   const fact = queries.getNextUnrevealedFact.get();
-  if (!fact) return c.json({ error: "No more facts to reveal" }, 404);
+  if (!fact) {
+    broadcast("quiz_complete", {});
+    return c.json({ error: "No more facts to reveal" }, 404);
+  }
 
   db.query("UPDATE facts SET is_revealed = 1 WHERE id = ?").run(fact.id);
   db.query("UPDATE game_state SET current_fact_id = ? WHERE id = 1").run(fact.id);
@@ -99,8 +102,63 @@ adminRouter.post("/reveal", (c) => {
     // submitter withheld from broadcast — only revealed at end
   });
 
+  const remaining = queries.countUnrevealed.get()?.n ?? 0;
+  if (remaining === 0) {
+    broadcast("quiz_complete", {});
+  }
+
   // Return submitter to admin only
-  return c.json({ fact: { id: fact.id, text: fact.text, submitter: submitterNickname } });
+  return c.json({
+    fact: { id: fact.id, text: fact.text, submitter: submitterNickname },
+    remaining,
+  });
+});
+
+// Export all myykfaxes as a printable text file
+adminRouter.get("/export", (c) => {
+  const facts = db
+    .query<
+      { id: number; text: string; is_preseeded: number; is_revealed: number; created_at: string; submitter_nickname: string | null },
+      []
+    >(`
+      SELECT f.id, f.text, f.is_preseeded, f.is_revealed, f.created_at,
+             g.nickname as submitter_nickname
+      FROM facts f
+      LEFT JOIN guests g ON g.id = f.submitted_by
+      ORDER BY f.created_at ASC
+    `)
+    .all();
+
+  const scores = queries.getScores.all();
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+
+  const lines: string[] = [];
+  lines.push("== Myykfax — Compendium of Myykfacts ==");
+  lines.push(`exported ${new Date().toISOString()}`);
+  lines.push(`${facts.length} fact${facts.length === 1 ? "" : "s"} total`);
+  lines.push("");
+  lines.push("--- FACTS ---");
+  facts.forEach((f, i) => {
+    const author = f.is_preseeded ? "[seed]" : (f.submitter_nickname ?? "???");
+    lines.push(`${i + 1}. "${f.text}"`);
+    lines.push(`   — ${author}`);
+    lines.push("");
+  });
+
+  if (scores.length > 0) {
+    lines.push("--- FINAL LEADERBOARD ---");
+    scores.forEach((s, i) => {
+      lines.push(`${i + 1}. ${s.nickname} — ${s.score} pt${s.score === 1 ? "" : "s"}`);
+    });
+    lines.push("");
+  }
+
+  return new Response(lines.join("\n"), {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Disposition": `attachment; filename="myykfax-export-${stamp}.txt"`,
+    },
+  });
 });
 
 // Get full game state summary
