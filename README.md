@@ -2,7 +2,7 @@
 
 A mobile-first webapp for Myyk's birthday party. Guests submit and receive fun facts ("Myykfacts") through an 8-bit fax machine interface, then play a live attribution guessing game.
 
-See [SPEC.md](SPEC.md) for the full design and [UI_MOCKUPS.md](UI_MOCKUPS.md) for screen mocks.
+See [SPEC.md](SPEC.md) for the full design.
 
 ## Stack
 
