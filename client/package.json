@@ -1,6 +1,7 @@
 {
   "name": "myykfax-client",
   "type": "module",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

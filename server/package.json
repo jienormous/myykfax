@@ -1,6 +1,7 @@
 {
   "name": "myykfax-server",
   "type": "module",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "bun run --hot index.ts",
     "start": "bun run index.ts"
