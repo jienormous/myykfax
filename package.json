@@ -6,5 +6,8 @@
     "dev:client": "cd client && bun run dev",
     "build": "cd client && bun install && bun run build",
     "start": "bun run server/index.ts"
+  },
+  "devDependencies": {
+    "puppeteer": "^24.40.0"
   }
 }
